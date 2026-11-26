@@ -1,6 +1,6 @@
 # AETHERON Cloud API
 
-FastAPI service with an early server-side Groq chat adapter.
+FastAPI service with Supabase-authenticated Groq chat and RLS-scoped conversation persistence.
 
 ## Run locally
 
@@ -14,7 +14,9 @@ FastAPI service with an early server-side Groq chat adapter.
 
 Health: http://localhost:8000/health  
 OpenAPI docs: http://localhost:8000/docs  
-Chat: POST http://localhost:8000/api/v1/chat
+Chat: POST http://localhost:8000/api/v1/chat  
+Conversation history: GET/POST http://localhost:8000/api/v1/conversations  
+Messages: GET http://localhost:8000/api/v1/conversations/{id}/messages
 
 ## Required server environment
 
@@ -33,4 +35,4 @@ After deployment, copy the service URL and set the GitHub Actions repository var
 
 ## Current security and product limits
 
-This is an early chat preview, not a production multi-user agent. It has request validation and a best-effort in-memory per-process rate limit, but no user authentication, tenant isolation, persistent conversation storage, Redis-backed global rate limiting, audit trail, or tool execution. Do not send sensitive personal, financial, identity, or business-confidential information. Add those controls and complete a security review before public production use.
+This is an early authenticated chat preview, not a production multi-user agent. Conversation and message operations use the caller's Supabase JWT, and Supabase Row Level Security is the final tenant-isolation boundary. The API also checks conversation ownership before returning message history. The preview still uses a best-effort in-memory per-process rate limit and has no Redis-backed global rate limiting, audit trail, or tool execution. Do not send sensitive personal, financial, identity, or business-confidential information. Complete deployment configuration, end-to-end tests, and a security review before public production use.
