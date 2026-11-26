@@ -10,7 +10,7 @@ export default function Home(){
  const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [menu,setMenu]=useState(false);
  const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]);
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
- const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\\/$/,"");
+ const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\/$/,"");
  const submit=async(value=prompt)=>{
   const text=value.trim(); if(!text||loading)return;
   if(!apiUrl){setChatError("Cloud API URL is not configured yet. Deploy the Cloud API, then set NEXT_PUBLIC_AETHERON_API_URL in the GitHub Pages build environment.");return;}
