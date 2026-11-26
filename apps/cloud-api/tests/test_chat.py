@@ -64,4 +64,5 @@ def test_chat_calls_provider_and_returns_reply(monkeypatch) -> None:
     assert response.json() == {
         "reply": "Hello! How can I help?",
         "provider": "groq",
+        "conversation_id": "",
     }
