@@ -7,7 +7,7 @@ const navigation = [{name:"Overview",icon:Compass},{name:"My intelligence",icon:
 const ideas = [{name:"Business brief",desc:"Turn an idea into a clear action plan",icon:BriefcaseBusiness},{name:"Deep research",desc:"Explore a topic with cited findings",icon:Globe2},{name:"Build something",desc:"Plan, design, and review code",icon:TerminalSquare}];
 
 export default function Home(){
- const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [preview,setPreview]=useState(false); const [menu,setMenu]=useState(false);
+ const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [menu,setMenu]=useState(false);
  const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]);
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
  const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\\/$/,"");
@@ -29,7 +29,7 @@ export default function Home(){
   <aside className={`sidebar ${menu?"sidebar-open":""}`}>
    <div className="brand"><div className="brand-symbol">A<span/></div><div><b>AETHERON</b><small>THE AUTONOMOUS INTELLIGENCE</small></div><button className="close-menu" onClick={()=>setMenu(false)} aria-label="Close menu"><X size={18}/></button></div>
    <button className="workspace"><span className="avatar">T</span><span><b>Personal workspace</b><small>Owner edition</small></span><ChevronDown size={15}/></button>
-   <button className="new-chat" onClick={()=>{setPrompt("");setMessages([]);setChatError("");setPreview(false)}}><Plus size={17}/> New conversation <kbd>⌘ K</kbd></button>
+   <button className="new-chat" onClick={()=>{setPrompt("");setMessages([]);setChatError("")}}><Plus size={17}/> New conversation <kbd>⌘ K</kbd></button>
    <label className="nav-label">WORKSPACE</label><nav>{navigation.map(({name,icon:Icon})=><button key={name} onClick={()=>setActive(name)} className={`nav-link ${active===name?"selected":""}`}><Icon size={17}/>{name}{name==="Projects"&&<span className="count">05</span>}</button>)}</nav>
    <label className="nav-label system-label">YOUR SYSTEM</label><nav><button className="nav-link" onClick={()=>setActive("Integrations")}><Command size={17}/>Integrations</button><button className="nav-link" onClick={()=>setActive("Security center")}><ShieldCheck size={17}/>Security center<span className="online-dot"/></button><button className="nav-link" onClick={()=>setActive("Settings")}><Settings2 size={17}/>Settings</button></nav>
    <div className="side-bottom"><div className="privacy-card"><div><LockKeyhole size={14}/> PRIVATE BY DESIGN <i/></div><p>Your intelligence. Your rules. Your data stays yours.</p><button onClick={()=>setActive("Security center")}>Explore security <ArrowUpRight size={13}/></button></div><div className="user-row"><span className="avatar">T</span><span><b>Architect workspace</b><small>Owner account</small></span><Settings2 size={16}/></div></div>
