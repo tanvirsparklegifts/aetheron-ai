@@ -18,4 +18,4 @@ def test_health_endpoint_returns_service_status() -> None:
 def test_api_root_discloses_foundation_state() -> None:
     response = client.get("/api/v1")
     assert response.status_code == 200
-    assert response.json()["status"] == "foundation"
+    assert response.json()["status"] == "chat-preview"
