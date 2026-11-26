@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict, deque
+from datetime import datetime, timezone
 from time import monotonic
 from uuid import UUID
 
@@ -269,7 +270,7 @@ async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
             "PATCH",
             "conversations",
             params={"id": f"eq.{payload.conversation_id}", "user_id": f"eq.{user['id']}"},
-            body={"updated_at": "now()"},
+            body={"updated_at": datetime.now(timezone.utc).isoformat()},
             prefer="return=minimal",
         )
 
