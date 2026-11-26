@@ -11,11 +11,11 @@ def test_health_endpoint_returns_service_status() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "aetheron-cloud-api",
-        "version": "0.2.0",
+        "version": "0.3.0",
     }
 
 
 def test_api_root_discloses_foundation_state() -> None:
     response = client.get("/api/v1")
     assert response.status_code == 200
-    assert response.json()["status"] == "chat-preview"
+    assert response.json()["status"] == "authenticated-chat-preview"
