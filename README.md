@@ -42,6 +42,13 @@ Requirements: Node.js 20.9+.
 
 Open http://localhost:3000.
 
+## Preview deployment
+A GitHub Pages deployment workflow is included. In the repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**. After Pages is enabled, pushes to `main` publish the static web prototype at:
+
+https://tanvirsparklegifts.github.io/aetheron-ai/
+
+This is a visual prototype only; it does not connect to the Cloud API or run AI tasks.
+
 ## Roadmap
 - [x] Product direction and platform scope
 - [x] Initial architecture and threat-model documentation
