@@ -4,9 +4,9 @@
 **YOUR WORLD. YOUR INTELLIGENCE.**  
 *Powered by EliteAxis Global*
 
-AETHERON is a privacy-first personal executive intelligence platform concept with a shared cloud intelligence layer and Web, Windows, and Android experiences.
+AETHERON is a privacy-first personal executive intelligence platform with a shared cloud intelligence layer and planned Web, Windows, and Android experiences.
 
-> Status: early foundation/prototype. This repository contains product architecture, security principles, and a visual dashboard starter. It is not yet a production autonomous agent; model execution, accounts, integrations, and device automation are not connected.
+> Status: early foundation and AI chat preview. The first server-side Groq chat adapter is implemented, but authentication, tenant isolation, persistent memory, integrations, and device automation are not production-ready.
 
 ## Planned surfaces
 - Web Dashboard: primary product and account control center.
@@ -24,8 +24,8 @@ AETHERON is a privacy-first personal executive intelligence platform concept wit
 7. Safety, legality, and user control take priority over autonomy.
 
 ## Repository layout
-- apps/web: premium Next.js dashboard starter
-- apps/cloud-api: planned FastAPI service
+- apps/web: Next.js dashboard and chat interface
+- apps/cloud-api: FastAPI service and model-provider adapter
 - apps/windows-companion: planned desktop client
 - apps/android-companion: planned Android client
 - core: intelligence, orchestration, memory, security, permissions
@@ -33,34 +33,40 @@ AETHERON is a privacy-first personal executive intelligence platform concept wit
 - integrations: connector boundaries
 - docs: product, architecture, threat model, API and data design
 
-## Run the web prototype
-Requirements: Node.js 20.9+.
-
+## Run locally
+Web:
     cd apps/web
     npm install
     npm run dev
 
-Open http://localhost:3000.
+Cloud API:
+    cd apps/cloud-api
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    uvicorn app.main:app --reload
 
-## Preview deployment
-A GitHub Pages deployment workflow is included. In the repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**. After Pages is enabled, pushes to `main` publish the static web prototype at:
+See [Cloud API setup](apps/cloud-api/README.md) for Groq environment configuration.
 
+## GitHub Pages preview
 https://tanvirsparklegifts.github.io/aetheron-ai/
 
-This is a visual prototype only; it does not connect to the Cloud API or run AI tasks.
+GitHub Pages hosts only the static web frontend. The FastAPI Cloud API must be deployed separately. Set the GitHub Actions repository variable `NEXT_PUBLIC_AETHERON_API_URL` to the deployed API origin before rebuilding Pages.
 
 ## Roadmap
 - [x] Product direction and platform scope
 - [x] Initial architecture and threat-model documentation
 - [x] Premium dashboard visual prototype
-- [ ] Cloud API and identity foundation
-- [ ] Tenant-isolated memory and permission engine
-- [ ] Read-only integrations and audit trail
+- [x] First server-side Groq chat adapter and chat endpoint
+- [x] Dashboard chat client integration
+- [ ] Deploy Cloud API and connect GitHub Pages preview
+- [ ] Authentication, tenant isolation, and persistent memory
+- [ ] Redis rate limiting, audit trail, and security review
+- [ ] Read-only integrations and approval-gated agent workflows
 - [ ] Windows and Android companions
-- [ ] Evaluated, approval-gated agent workflows
 
 ## Security
-Never commit API keys, passwords, private keys, recovery phrases, identity documents, or customer data. Use environment variables locally and a managed secret store in deployed environments.
+Never commit API keys, passwords, private keys, recovery phrases, identity documents, or customer data. Use server-side environment variables and a managed secret store. The current chat preview is not designed for sensitive data or public production use.
 
 ## Brand
 - Name: AETHERON
