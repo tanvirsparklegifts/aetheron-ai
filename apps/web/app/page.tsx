@@ -21,7 +21,7 @@ export default function Home(){
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.detail||"AETHERON could not complete this request.");
    if(typeof data.reply!=="string"||!data.reply.trim())throw new Error("The AI provider returned an empty reply.");
-   setMessages([...next,{role:"assistant",content:data.reply}].slice(-12));
+   setMessages([...next,{role:"assistant" as const,content:data.reply}].slice(-12));
   }catch(error){setChatError(error instanceof Error?error.message:"Connection failed. Please try again.");}
   finally{setLoading(false);}
  };
