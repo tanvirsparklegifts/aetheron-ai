@@ -13,9 +13,10 @@ export default function Home(){
  const [session,setSession]=useState<Session|null>(null); const [authReady,setAuthReady]=useState(!supabase);
  useEffect(()=>{ if(!supabase)return; let active=true; supabase.auth.getSession().then(({data})=>{if(active){setSession(data.session);setAuthReady(true);}}); const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{if(active){setSession(next);setAuthReady(true);}}); return ()=>{active=false;subscription.unsubscribe();}; },[]);
  const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [menu,setMenu]=useState(false);
- const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]);
+ const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]); const [conversationId,setConversationId]=useState<string|null>(null);
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
  const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\/$/,"");
+ useEffect(()=>{let active=true;const restore=async()=>{if(!session||!apiUrl)return;try{const headers={Authorization:"Bearer "+session.access_token};const listResponse=await fetch(apiUrl+"/api/v1/conversations",{headers});if(!listResponse.ok)return;const items=await listResponse.json();if(!active||!Array.isArray(items)||!items.length)return;const latest=items[0];const historyResponse=await fetch(apiUrl+"/api/v1/conversations/"+latest.id+"/messages",{headers});if(!historyResponse.ok)return;const history=await historyResponse.json();if(active){setConversationId(latest.id);setMessages(Array.isArray(history)?history.map((item:{role:"user"|"assistant";content:string})=>({role:item.role,content:item.content})):[]);}}catch{/* History can be restored when the API becomes available. */}};restore();return()=>{active=false;};},[session,apiUrl]);
  const submit=async(value=prompt)=>{
   const text=value.trim(); if(!text||loading)return;
   if(!apiUrl){setChatError("Cloud API URL is not configured yet. Deploy the Cloud API, then set NEXT_PUBLIC_AETHERON_API_URL in the GitHub Pages build environment.");return;}
@@ -24,7 +25,9 @@ export default function Home(){
   try{
    const currentSession = session ?? (supabase ? (await supabase.auth.getSession()).data.session : null);
    if(!currentSession) throw new Error("Please sign in again to continue.");
-   const response=await fetch(apiUrl+"/api/v1/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+currentSession.access_token},body:JSON.stringify({messages:next})});
+   let activeConversationId=conversationId;
+   if(!activeConversationId){const created=await fetch(apiUrl+"/api/v1/conversations",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+currentSession.access_token},body:JSON.stringify({title:text.slice(0,80)||"New conversation"})});const createdData=await created.json().catch(()=>({}));if(!created.ok||!createdData.id)throw new Error(createdData.detail||"Could not create a saved conversation.");activeConversationId=createdData.id;setConversationId(activeConversationId);}
+   const response=await fetch(apiUrl+"/api/v1/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+currentSession.access_token},body:JSON.stringify({messages:next,conversation_id:activeConversationId})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.detail||"AETHERON could not complete this request.");
    if(typeof data.reply!=="string"||!data.reply.trim())throw new Error("The AI provider returned an empty reply.");
@@ -38,7 +41,7 @@ export default function Home(){
   <aside className={`sidebar ${menu?"sidebar-open":""}`}>
    <div className="brand"><div className="brand-symbol">A<span/></div><div><b>AETHERON</b><small>THE AUTONOMOUS INTELLIGENCE</small></div><button className="close-menu" onClick={()=>setMenu(false)} aria-label="Close menu"><X size={18}/></button></div>
    <button className="workspace"><span className="avatar">T</span><span><b>Personal workspace</b><small>Owner edition</small></span><ChevronDown size={15}/></button>
-   <button className="new-chat" onClick={()=>{setPrompt("");setMessages([]);setChatError("")}}><Plus size={17}/> New conversation <kbd>⌘ K</kbd></button>
+   <button className="new-chat" onClick={()=>{setPrompt("");setMessages([]);setConversationId(null);setChatError("")}}><Plus size={17}/> New conversation <kbd>⌘ K</kbd></button>
    <label className="nav-label">WORKSPACE</label><nav>{navigation.map(({name,icon:Icon})=><button key={name} onClick={()=>setActive(name)} className={`nav-link ${active===name?"selected":""}`}><Icon size={17}/>{name}{name==="Projects"&&<span className="count">05</span>}</button>)}</nav>
    <label className="nav-label system-label">YOUR SYSTEM</label><nav><button className="nav-link" onClick={()=>setActive("Integrations")}><Command size={17}/>Integrations</button><button className="nav-link" onClick={()=>setActive("Security center")}><ShieldCheck size={17}/>Security center<span className="online-dot"/></button><button className="nav-link" onClick={()=>setActive("Settings")}><Settings2 size={17}/>Settings</button></nav>
    <div className="side-bottom"><div className="privacy-card"><div><LockKeyhole size={14}/> PRIVATE BY DESIGN <i/></div><p>Your intelligence. Your rules. Your data stays yours.</p><button onClick={()=>setActive("Security center")}>Explore security <ArrowUpRight size={13}/></button></div><div className="user-row"><span className="avatar">T</span><span><b>Architect workspace</b><small>Owner account</small></span><Settings2 size={16}/></div></div>
