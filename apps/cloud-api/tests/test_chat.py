@@ -37,7 +37,7 @@ def test_chat_calls_provider_and_returns_reply(monkeypatch) -> None:
         return "Hello! How can I help?"
 
     monkeypatch.setenv("GROQ_API_KEY", "test-only-placeholder")
-    monkeypatch.setattr("app.main.require_authenticated_user", lambda request: None)\n    monkeypatch.setattr("app.main.generate_reply", fake_generate_reply)
+    monkeypatch.setattr("app.main.require_authenticated_user", fake_authenticated_user)\n    monkeypatch.setattr("app.main.generate_reply", fake_generate_reply)
     response = client.post(
         "/api/v1/chat",
         json={"messages": [{"role": "user", "content": "Hi"}]},
