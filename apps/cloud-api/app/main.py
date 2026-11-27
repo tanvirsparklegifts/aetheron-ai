@@ -255,6 +255,7 @@ async def api_root() -> dict[str, str]:
 
 @app.post("/api/v1/chat", tags=["intelligence"])
 async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
+    user = await require_authenticated_user(request)
     client_key = request.client.host if request.client else "unknown"
     enforce_preview_rate_limit(client_key)
 
@@ -264,7 +265,6 @@ async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
             detail="AI provider is not configured on the server yet.",
         )
 
-    user = await require_authenticated_user(request)
     memories = await fetch_active_memories(request, user["id"])
     memory_context = "\\n".join(
         f"- [{item['category']}] {item['memory'][:1000]}"
