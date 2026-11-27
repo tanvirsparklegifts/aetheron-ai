@@ -21,6 +21,7 @@ Chat: POST http://localhost:8000/api/v1/chat
 - `GROQ_API_KEY`: secret from Groq Console; server-side only.
 - `AETHERON_LLM_BASE_URL`: defaults to Groq's OpenAI-compatible API.
 - `AETHERON_MODEL`: defaults to `openai/gpt-oss-20b`.
+- `TAVILY_API_KEY`: optional server-side key for the Research workspace. Tavily currently lists 1,000 free API credits per month with no credit card required. When the free quota is exhausted, search requests stop until the next reset or an explicit paid upgrade. Never put this key in the frontend or GitHub.
 - `AETHERON_ALLOWED_ORIGINS`: comma-separated exact browser origins.
 
 The web frontend separately needs the public API origin in `NEXT_PUBLIC_AETHERON_API_URL`. This is a public URL, never a secret.
@@ -33,4 +34,4 @@ After deployment, copy the service URL and set the GitHub Actions repository var
 
 ## Current security and product limits
 
-This is an early chat preview, not a production multi-user agent. It has request validation and a best-effort in-memory per-process rate limit, but no user authentication, tenant isolation, persistent conversation storage, Redis-backed global rate limiting, audit trail, or tool execution. Do not send sensitive personal, financial, identity, or business-confidential information. Add those controls and complete a security review before public production use.
+This is an early preview, not a production multi-user agent. Supabase bearer-token authentication, account-scoped data access via RLS, persistent chat history, saved memory, private knowledge retrieval, and authenticated web research are implemented. The current rate limiter is still best-effort and per process; Redis-backed global rate limiting, comprehensive audit trail, deeper security review, backups, and public-production hardening remain outstanding. Do not send sensitive personal, financial, identity, or business-confidential information until those controls are complete.
