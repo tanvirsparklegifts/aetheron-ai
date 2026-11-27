@@ -68,6 +68,14 @@ GitHub Pages hosts only the static web frontend. The FastAPI Cloud API must be d
 ## Security
 Never commit API keys, passwords, private keys, recovery phrases, identity documents, or customer data. Use server-side environment variables and a managed secret store. The current chat preview is not designed for sensitive data or public production use.
 
+## Legal and intellectual property
+
+- [Proprietary software license](LICENSE) — original AETHERON materials are All Rights Reserved unless a separate written license says otherwise.
+- [Trademark and brand usage policy](TRADEMARK_POLICY.md) — rules for use of the AETHERON name, logo, and brand assets.
+- [Copyright and attribution notice](NOTICE) — project ownership notice and third-party license reminder.
+
+The AETHERON name and brand are identified with ™ as a claimed mark; this repository does not claim that a trademark registration has been granted. Third-party components remain under their own licenses.
+
 ## Brand
 - Name: AETHERON
 - Descriptor: THE AUTONOMOUS INTELLIGENCE
