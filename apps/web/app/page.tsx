@@ -41,7 +41,7 @@ type SpeechRecognitionWindow = Window & {SpeechRecognition?:new()=>SpeechRecogni
 export default function Home(){
  const [session,setSession]=useState<Session|null>(null); const [authReady,setAuthReady]=useState(!supabase);
  useEffect(()=>{ if(!supabase)return; let active=true; supabase.auth.getSession().then(({data})=>{if(active){setSession(data.session);setAuthReady(true);}}); const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{if(active){setSession(next);setAuthReady(true);}}); return ()=>{active=false;subscription.unsubscribe();}; },[]);
- const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [menu,setMenu]=useState(false); const [voiceInputActive,setVoiceInputActive]=useState(false); const [voiceInputError,setVoiceInputError]=useState(""); const [voiceLanguage,setVoiceLanguage]=useState("bn-BD"); const [replyLanguage,setReplyLanguage]=useState("auto"); const [speakReplies,setSpeakReplies]=useState(false); const [voiceOutputAvailable,setVoiceOutputAvailable]=useState(false); const [recognition,setRecognition]=useState<SpeechRecognitionLike|null>(null);
+ const [active,setActive]=useState("Overview"); const [prompt,setPrompt]=useState(""); const [menu,setMenu]=useState(false); const [voiceInputActive,setVoiceInputActive]=useState(false); const [voiceInputError,setVoiceInputError]=useState(""); const [voiceLanguage,setVoiceLanguage]=useState("bn-BD"); const [replyLanguage,setReplyLanguage]=useState("auto"); const [speakReplies,setSpeakReplies]=useState(false); const [recognition,setRecognition]=useState<SpeechRecognitionLike|null>(null);
  const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]);
  const [conversations,setConversations]=useState<Conversation[]>([]);
  const [currentConversationId,setCurrentConversationId]=useState<string|null>(null);
@@ -127,7 +127,6 @@ export default function Home(){
   setHistoryActionId(null);
  };
  const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\/$/,"");
- useEffect(()=>{setVoiceOutputAvailable(typeof window!=="undefined"&&"speechSynthesis" in window&&"SpeechSynthesisUtterance" in window);},[]);
  useEffect(()=>()=>{if(recognition){try{recognition.stop();}catch{}}if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();},[recognition]);
  const stopVoiceOutput=()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();};
  const speakReply=(value:string)=>{
@@ -146,7 +145,7 @@ export default function Home(){
    instance.onend=()=>{setVoiceInputActive(false);setRecognition(null);};setRecognition(instance);instance.start();setVoiceInputActive(true);
   }catch{setVoiceInputError("Could not start the microphone. Check browser permission and try again.");setVoiceInputActive(false);}
  };
- const toggleReplySpeech=()=>{if(speakReplies){setSpeakReplies(false);stopVoiceOutput();return;}if(!voiceOutputAvailable){setVoiceInputError("Speech output is not supported in this browser.");return;}setSpeakReplies(true);};
+ const toggleReplySpeech=()=>{if(speakReplies){setSpeakReplies(false);stopVoiceOutput();return;}if(typeof window==="undefined"||!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){setVoiceInputError("Speech output is not supported in this browser.");return;}setSpeakReplies(true);};
 
  const submit=async(value=prompt)=>{
   const text=value.trim(); if(!text||loading)return;
