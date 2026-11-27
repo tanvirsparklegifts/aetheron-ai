@@ -9,6 +9,7 @@ import { Activity, ArrowUpRight, AudioLines, Bell, BrainCircuit, BriefcaseBusine
 const navigation = [{name:"Overview",icon:Compass},{name:"Conversations",icon:MessageSquare},{name:"My intelligence",icon:BrainCircuit},{name:"Projects",icon:FolderKanban},{name:"Research",icon:Globe2},{name:"Workflows",icon:Workflow},{name:"Knowledge",icon:FileText}];
 const ideas = [{name:"Business brief",desc:"Turn an idea into a clear action plan",icon:BriefcaseBusiness},{name:"Deep research",desc:"Explore a topic with cited findings",icon:Globe2},{name:"Build something",desc:"Plan, design, and review code",icon:TerminalSquare}];
 type Conversation = {id:string;title:string;updated_at:string};
+type Memory = {id:string;memory:string;category:string;source:string;is_active:boolean;created_at:string;updated_at:string};
 
 export default function Home(){
  const [session,setSession]=useState<Session|null>(null); const [authReady,setAuthReady]=useState(!supabase);
@@ -19,6 +20,7 @@ export default function Home(){
  const [currentConversationId,setCurrentConversationId]=useState<string|null>(null);
  const [historyLoading,setHistoryLoading]=useState(false); const [historySearch,setHistorySearch]=useState("");
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
+ const [memories,setMemories]=useState<Memory[]>([]); const [memoryDraft,setMemoryDraft]=useState(""); const [memoryCategory,setMemoryCategory]=useState("general"); const [memoryLoading,setMemoryLoading]=useState(false); const [memoryError,setMemoryError]=useState("");
  useEffect(()=>{
   if(!supabase||!session?.user.id)return;
   let active=true;
@@ -28,6 +30,19 @@ export default function Home(){
   })();
   return ()=>{active=false;};
  },[session?.user.id]);
+ useEffect(()=>{
+  if(active!=="My intelligence"||!supabase||!session?.user.id)return;
+  let alive=true;
+  setMemoryLoading(true);setMemoryError("");
+  (async()=>{
+   const {data,error}=await supabase.from("memories").select("id,memory,category,source,is_active,created_at,updated_at").eq("user_id",session.user.id).order("updated_at",{ascending:false}).limit(100);
+   if(!alive)return;
+   if(error)setMemoryError("Could not load saved memories: "+error.message);
+   else setMemories((data||[]) as Memory[]);
+   setMemoryLoading(false);
+  })();
+  return ()=>{alive=false;};
+ },[active,session?.user.id]);
  const openConversation=async(conversation:Conversation)=>{
   if(!supabase||loading)return;
   setHistoryLoading(true);setChatError("");setCurrentConversationId(conversation.id);
@@ -71,6 +86,26 @@ export default function Home(){
   }catch(error){setChatError(error instanceof Error?error.message:"Connection failed. Please try again.");}
   finally{setLoading(false);}
  };
+ const saveMemory=async()=>{
+  const value=memoryDraft.trim();if(!value||!supabase||!session)return;
+  setMemoryLoading(true);setMemoryError("");
+  const {data,error}=await supabase.from("memories").insert({user_id:session.user.id,memory:value,category:memoryCategory.trim()||"general",source:"user"}).select("id,memory,category,source,is_active,created_at,updated_at").single();
+  if(error)setMemoryError("Could not save memory: "+error.message);
+  else{setMemories(previous=>[data as Memory,...previous]);setMemoryDraft("");}
+  setMemoryLoading(false);
+ };
+ const toggleMemory=async(item:Memory)=>{
+  if(!supabase||!session)return;
+  const {error}=await supabase.from("memories").update({is_active:!item.is_active}).eq("id",item.id).eq("user_id",session.user.id);
+  if(error)setMemoryError("Could not update memory: "+error.message);
+  else setMemories(previous=>previous.map(memory=>memory.id===item.id?{...memory,is_active:!memory.is_active}:memory));
+ };
+ const removeMemory=async(item:Memory)=>{
+  if(!supabase||!session)return;
+  const {error}=await supabase.from("memories").delete().eq("id",item.id).eq("user_id",session.user.id);
+  if(error)setMemoryError("Could not delete memory: "+error.message);
+  else setMemories(previous=>previous.filter(memory=>memory.id!==item.id));
+ };
  if(!authReady) return <main className="auth-shell"><div className="auth-card">Loading secure workspace…</div></main>;
  if(!session) return <AuthPanel />;
  return <main className="app-shell">
@@ -94,7 +129,7 @@ export default function Home(){
    </> : <section className="workspace-page">
     <div className="workspace-page-head"><div className="eyebrow"><i/> AETHERON WORKSPACE <i/></div><h1>{active}</h1><p>Manage and explore your AETHERON workspace from one place.</p></div>
     {active==="Conversations" ? <div className="workspace-panel"><div className="panel-toolbar"><div><h2>Conversation history</h2><p>Open a saved conversation to continue where you left off.</p></div><div className="history-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search conversations"/></div></div>{historyLoading&&<p className="panel-muted">Loading saved conversations…</p>}{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).length===0?<div className="panel-empty"><MessageSquare size={24}/><b>No conversations found</b><span>Your saved conversations will appear here after you start chatting.</span></div>:<div className="conversation-library">{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).map(c=><button className="conversation-row" key={c.id} onClick={()=>{openConversation(c);setActive("Overview")}}><span className="conversation-row-icon"><MessageSquare size={17}/></span><span className="conversation-row-copy"><b>{c.title}</b><small>Updated {new Date(c.updated_at).toLocaleString()}</small></span><ArrowUpRight size={16}/></button>)}</div>}</div> :
-    active==="My intelligence" ? <div className="workspace-grid"><article className="workspace-panel"><BrainCircuit/><h2>Intelligence engine</h2><p>Chat is connected to the AETHERON Cloud API. Conversation context is sent within the active chat. Persistent cross-chat memory is not yet enabled.</p><span className="feature-status pending">Memory integration pending</span></article><article className="workspace-panel"><LockKeyhole/><h2>Personal context</h2><p>Your conversations are stored in your private Supabase account. Memory controls and retrieval will be added before this is described as persistent AI memory.</p><span className="feature-status">Private account data</span></article></div> :
+    active==="My intelligence" ? <div className="workspace-grid"><article className="workspace-panel"><BrainCircuit/><h2>Persistent memory</h2><p>Save facts and preferences you want AETHERON to use in future conversations. Active memories are retrieved by the authenticated Cloud API and remain scoped to your account.</p><span className="feature-status">Cross-chat retrieval enabled</span><div className="memory-form"><textarea value={memoryDraft} onChange={event=>setMemoryDraft(event.target.value)} placeholder="Example: I prefer Bangla transliteration and practical step-by-step explanations." maxLength={4000}/><input value={memoryCategory} onChange={event=>setMemoryCategory(event.target.value)} placeholder="Category (e.g. preference, project)" maxLength={80}/><button className="panel-action" disabled={!memoryDraft.trim()||memoryLoading} onClick={saveMemory}>Save memory</button></div>{memoryError&&<p className="memory-error">{memoryError}</p>}</article><article className="workspace-panel"><LockKeyhole/><h2>Your saved context</h2><p>Only you can read, change, deactivate or delete these records. Deactivated memories are not sent to the AI.</p>{memoryLoading&&<p className="panel-muted">Loading memories…</p>}{!memoryLoading&&memories.length===0?<div className="panel-empty"><BrainCircuit size={22}/><b>No saved memories yet</b><span>Add a preference or project fact to make future chats more relevant.</span></div>:<div className="memory-list">{memories.map(item=><div className="memory-item" key={item.id}><div><span className="memory-category">{item.category}{item.is_active?" · active":" · paused"}</span><p>{item.memory}</p></div><div className="memory-actions"><button onClick={()=>toggleMemory(item)}>{item.is_active?"Pause":"Activate"}</button><button onClick={()=>removeMemory(item)}>Delete</button></div></div>)}</div>}</article></div> :
     active==="Projects" ? <div className="workspace-grid">{["AETHERON AI","Aetherium Vault","T.M.T Protocol","BLACK LOTUS","AERO-X Protocol"].map((name,i)=><article className="workspace-panel project-panel" key={name}><FolderKanban/><small>INITIATIVE 0{i+1}</small><h2>{name}</h2><p>Project workspace entry. Detailed project boards and task synchronization are not connected yet.</p><span className="feature-status pending">Workspace setup pending</span></article>)}</div> :
     active==="Research" ? <div className="workspace-panel"><Globe2/><h2>Research workspace</h2><p>Research tools, source retrieval and citation workflows are not connected in this preview. AETHERON will not claim to have browsed or verified sources unless a research connector is enabled.</p><span className="feature-status pending">Research connector not connected</span></div> :
     active==="Workflows" ? <div className="workspace-panel"><Workflow/><h2>Workflow automation</h2><p>Workflow templates and approval controls are planned. No external action will run from this screen yet.</p><span className="feature-status pending">Automation not connected</span></div> :
