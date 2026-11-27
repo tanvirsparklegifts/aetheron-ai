@@ -171,7 +171,8 @@ export default function Home(){
    if(!response.ok)throw new Error(data.detail||"AETHERON could not complete this request.");
    if(typeof data.reply!=="string"||!data.reply.trim())throw new Error("The AI provider returned an empty reply.");
    const assistantMessage={role:"assistant" as const,content:data.reply};
-   setMessages([...next,assistantMessage].slice(-12));\n   if(speakReplies)speakReply(data.reply);
+   setMessages([...next,assistantMessage].slice(-12));
+    if(speakReplies)speakReply(data.reply);
    const {error:saveAssistantError}=await supabase.from("messages").insert({conversation_id:activeConversationId,user_id:currentSession.user.id,role:"assistant",content:data.reply});
    if(saveAssistantError){setChatError("Reply received, but it could not be saved to history: "+saveAssistantError.message);return;}
    await supabase.from("conversations").update({updated_at:new Date().toISOString()}).eq("id",activeConversationId).eq("user_id",currentSession.user.id);
