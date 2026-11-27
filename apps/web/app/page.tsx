@@ -132,8 +132,8 @@ export default function Home(){
  const stopVoiceOutput=()=>{if(typeof window!=="undefined"&&"speechSynthesis" in window)window.speechSynthesis.cancel();};
  const speakReply=(value:string)=>{
   if(typeof window==="undefined"||!("speechSynthesis" in window)||!value.trim())return;
-  window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(value);utterance.lang=voiceLanguage;utterance.rate=0.96;utterance.pitch=1;
-  const prefix=voiceLanguage.toLowerCase().split("-")[0];const voice=window.speechSynthesis.getVoices().find(item=>item.lang.toLowerCase().startsWith(prefix));if(voice)utterance.voice=voice;
+  window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(value);const speechLanguage=replyLanguage==="auto"?voiceLanguage:replyLanguage;utterance.lang=speechLanguage;utterance.rate=0.96;utterance.pitch=1;
+  const prefix=speechLanguage.toLowerCase().split("-")[0];const voice=window.speechSynthesis.getVoices().find(item=>item.lang.toLowerCase().startsWith(prefix));if(voice)utterance.voice=voice;
   window.speechSynthesis.speak(utterance);
  };
  const startVoiceInput=()=>{
