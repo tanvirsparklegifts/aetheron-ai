@@ -20,10 +20,9 @@ export default function Home(){
  const [historyLoading,setHistoryLoading]=useState(false);
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
  useEffect(()=>{
-  if(!supabase||!session?.user.id){setConversations([]);return;}
+  if(!supabase||!session?.user.id)return;
   let active=true;
   (async()=>{
-   setHistoryLoading(true);
    const {data,error}=await supabase.from("conversations").select("id,title,updated_at").eq("user_id",session.user.id).eq("archived",false).order("updated_at",{ascending:false}).limit(30);
    if(active){if(error)setChatError("Could not load conversation history: "+error.message);else setConversations((data||[]) as Conversation[]);setHistoryLoading(false);}
   })();
