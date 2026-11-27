@@ -33,7 +33,6 @@ export default function Home(){
  useEffect(()=>{
   if(active!=="My intelligence"||!supabase||!session?.user.id)return;
   let alive=true;
-  setMemoryError("");
   (async()=>{
    const {data,error}=await supabase.from("memories").select("id,memory,category,source,is_active,created_at,updated_at").eq("user_id",session.user.id).order("updated_at",{ascending:false}).limit(100);
    if(!alive)return;
