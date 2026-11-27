@@ -110,6 +110,9 @@ def test_chat_includes_saved_memory_as_reference(monkeypatch) -> None:
 
     monkeypatch.setattr("app.main.require_authenticated_user", fake_authenticated_user)
     monkeypatch.setattr("app.main.fetch_active_memories", fake_memories)
+    async def fake_knowledge(request, query):
+        return []
+    monkeypatch.setattr("app.main.fetch_relevant_knowledge", fake_knowledge)
     monkeypatch.setenv("GROQ_API_KEY", "test-only-placeholder")
     monkeypatch.setattr("app.main.generate_reply", fake_generate_reply)
     response = client.post(
