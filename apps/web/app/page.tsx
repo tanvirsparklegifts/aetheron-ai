@@ -18,7 +18,7 @@ export default function Home(){
  const [messages,setMessages]=useState<{role:"user"|"assistant";content:string}[]>([]);
  const [conversations,setConversations]=useState<Conversation[]>([]);
  const [currentConversationId,setCurrentConversationId]=useState<string|null>(null);
- const [historyLoading,setHistoryLoading]=useState(false); const [historySearch,setHistorySearch]=useState("");
+ const [historyLoading,setHistoryLoading]=useState(false); const [historySearch,setHistorySearch]=useState(""); const [historyActionId,setHistoryActionId]=useState<string|null>(null); const [historyError,setHistoryError]=useState("");
  const [loading,setLoading]=useState(false); const [chatError,setChatError]=useState("");
  const [memories,setMemories]=useState<Memory[]>([]); const [memoryDraft,setMemoryDraft]=useState(""); const [memoryCategory,setMemoryCategory]=useState("general"); const [memoryLoading,setMemoryLoading]=useState(false); const [memoryError,setMemoryError]=useState("");
  useEffect(()=>{
@@ -52,6 +52,43 @@ export default function Home(){
    setPrompt("");
   }catch(error){setChatError(error instanceof Error?error.message:"Could not load this conversation.");}
   finally{setHistoryLoading(false);}
+ };
+ const renameConversation=async(conversation:Conversation)=>{
+  if(!supabase||!session||historyActionId)return;
+  const proposed=window.prompt("Rename this conversation",conversation.title);
+  if(proposed===null)return;
+  const title=proposed.trim();
+  if(!title||title===conversation.title)return;
+  if(title.length>120){setHistoryError("Conversation titles must be 120 characters or fewer.");return;}
+  setHistoryActionId(conversation.id);setHistoryError("");
+  const {error}=await supabase.from("conversations").update({title,updated_at:new Date().toISOString()}).eq("id",conversation.id).eq("user_id",session.user.id);
+  if(error)setHistoryError("Could not rename conversation: "+error.message);
+  else setConversations(previous=>previous.map(item=>item.id===conversation.id?{...item,title,updated_at:new Date().toISOString()}:item));
+  setHistoryActionId(null);
+ };
+ const archiveConversation=async(conversation:Conversation)=>{
+  if(!supabase||!session||historyActionId)return;
+  if(!window.confirm("Archive this conversation? It will be hidden from the active history, but not deleted."))return;
+  setHistoryActionId(conversation.id);setHistoryError("");
+  const {error}=await supabase.from("conversations").update({archived:true,updated_at:new Date().toISOString()}).eq("id",conversation.id).eq("user_id",session.user.id);
+  if(error)setHistoryError("Could not archive conversation: "+error.message);
+  else{
+   setConversations(previous=>previous.filter(item=>item.id!==conversation.id));
+   if(currentConversationId===conversation.id){setCurrentConversationId(null);setMessages([]);}
+  }
+  setHistoryActionId(null);
+ };
+ const deleteConversation=async(conversation:Conversation)=>{
+  if(!supabase||!session||historyActionId)return;
+  if(!window.confirm("Permanently delete this conversation and all its messages? This cannot be undone."))return;
+  setHistoryActionId(conversation.id);setHistoryError("");
+  const {error}=await supabase.from("conversations").delete().eq("id",conversation.id).eq("user_id",session.user.id);
+  if(error)setHistoryError("Could not delete conversation: "+error.message);
+  else{
+   setConversations(previous=>previous.filter(item=>item.id!==conversation.id));
+   if(currentConversationId===conversation.id){setCurrentConversationId(null);setMessages([]);}
+  }
+  setHistoryActionId(null);
  };
  const apiUrl=(process.env.NEXT_PUBLIC_AETHERON_API_URL||"").replace(/\/$/,"");
  const submit=async(value=prompt)=>{
@@ -127,7 +164,7 @@ export default function Home(){
    <footer className="page-footer"><div><span className="mini-a">A</span> POWERED BY <b>ELITEAXIS GLOBAL</b></div><div><span><Activity size={13}/> Early access preview</span><span><CalendarDays size={13}/> Roadmap active</span><CircleHelp size={15}/></div></footer>
    </> : <section className="workspace-page">
     <div className="workspace-page-head"><div className="eyebrow"><i/> AETHERON WORKSPACE <i/></div><h1>{active}</h1><p>Manage and explore your AETHERON workspace from one place.</p></div>
-    {active==="Conversations" ? <div className="workspace-panel"><div className="panel-toolbar"><div><h2>Conversation history</h2><p>Open a saved conversation to continue where you left off.</p></div><div className="history-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search conversations"/></div></div>{historyLoading&&<p className="panel-muted">Loading saved conversations…</p>}{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).length===0?<div className="panel-empty"><MessageSquare size={24}/><b>No conversations found</b><span>Your saved conversations will appear here after you start chatting.</span></div>:<div className="conversation-library">{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).map(c=><button className="conversation-row" key={c.id} onClick={()=>{openConversation(c);setActive("Overview")}}><span className="conversation-row-icon"><MessageSquare size={17}/></span><span className="conversation-row-copy"><b>{c.title}</b><small>Updated {new Date(c.updated_at).toLocaleString()}</small></span><ArrowUpRight size={16}/></button>)}</div>}</div> :
+    {active==="Conversations" ? <div className="workspace-panel"><div className="panel-toolbar"><div><h2>Conversation history</h2><p>Open a saved conversation to continue where you left off.</p></div><div className="history-search"><Search size={15}/><input value={historySearch} onChange={e=>setHistorySearch(e.target.value)} placeholder="Search conversations"/></div></div>{historyLoading&&<p className="panel-muted">Loading saved conversations…</p>}{historyError&&<p className="memory-error" role="alert">{historyError}</p>}{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).length===0?<div className="panel-empty"><MessageSquare size={24}/><b>No conversations found</b><span>Your saved conversations will appear here after you start chatting.</span></div>:<div className="conversation-library">{conversations.filter(c=>c.title.toLowerCase().includes(historySearch.toLowerCase())).map(c=><div className="conversation-row" key={c.id}><button className="conversation-open" onClick={()=>{openConversation(c);setActive("Overview")}} disabled={historyActionId===c.id}><span className="conversation-row-icon"><MessageSquare size={17}/></span><span className="conversation-row-copy"><b>{c.title}</b><small>Updated {new Date(c.updated_at).toLocaleString()}</small></span><ArrowUpRight size={16}/></button><div className="conversation-actions"><button onClick={()=>renameConversation(c)} disabled={!!historyActionId} aria-label={"Rename "+c.title}>Rename</button><button onClick={()=>archiveConversation(c)} disabled={!!historyActionId} aria-label={"Archive "+c.title}>Archive</button><button className="danger" onClick={()=>deleteConversation(c)} disabled={!!historyActionId} aria-label={"Delete "+c.title}>Delete</button></div></div>)}</div>}</div> :
     active==="My intelligence" ? <div className="workspace-grid"><article className="workspace-panel"><BrainCircuit/><h2>Persistent memory</h2><p>Save facts and preferences you want AETHERON to use in future conversations. Active memories are retrieved by the authenticated Cloud API and remain scoped to your account.</p><span className="feature-status">Cross-chat retrieval enabled</span><div className="memory-form"><textarea value={memoryDraft} onChange={event=>setMemoryDraft(event.target.value)} placeholder="Example: I prefer Bangla transliteration and practical step-by-step explanations." maxLength={4000}/><input value={memoryCategory} onChange={event=>setMemoryCategory(event.target.value)} placeholder="Category (e.g. preference, project)" maxLength={80}/><button className="panel-action" disabled={!memoryDraft.trim()||memoryLoading} onClick={saveMemory}>Save memory</button></div>{memoryError&&<p className="memory-error">{memoryError}</p>}</article><article className="workspace-panel"><LockKeyhole/><h2>Your saved context</h2><p>Only you can read, change, deactivate or delete these records. Deactivated memories are not sent to the AI.</p>{memoryLoading&&<p className="panel-muted">Loading memories…</p>}{!memoryLoading&&memories.length===0?<div className="panel-empty"><BrainCircuit size={22}/><b>No saved memories yet</b><span>Add a preference or project fact to make future chats more relevant.</span></div>:<div className="memory-list">{memories.map(item=><div className="memory-item" key={item.id}><div><span className="memory-category">{item.category}{item.is_active?" · active":" · paused"}</span><p>{item.memory}</p></div><div className="memory-actions"><button onClick={()=>toggleMemory(item)}>{item.is_active?"Pause":"Activate"}</button><button onClick={()=>removeMemory(item)}>Delete</button></div></div>)}</div>}</article></div> :
     active==="Projects" ? <div className="workspace-grid">{["AETHERON AI","Aetherium Vault","T.M.T Protocol","BLACK LOTUS","AERO-X Protocol"].map((name,i)=><article className="workspace-panel project-panel" key={name}><FolderKanban/><small>INITIATIVE 0{i+1}</small><h2>{name}</h2><p>Project workspace entry. Detailed project boards and task synchronization are not connected yet.</p><span className="feature-status pending">Workspace setup pending</span></article>)}</div> :
     active==="Research" ? <div className="workspace-panel"><Globe2/><h2>Research workspace</h2><p>Research tools, source retrieval and citation workflows are not connected in this preview. AETHERON will not claim to have browsed or verified sources unless a research connector is enabled.</p><span className="feature-status pending">Research connector not connected</span></div> :
