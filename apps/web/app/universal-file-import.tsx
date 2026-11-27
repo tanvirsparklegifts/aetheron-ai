@@ -20,7 +20,7 @@ type StoredFile = {
 
 const BUCKET = "aetheron-private-files";
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
-const safeName = (name: string) => name.replace(/[\\/\\\\]/g, "_").replace(/[\\u0000-\\u001f]/g, "_").slice(0, 180) || "unnamed-file";
+const safeName = (name: string) => name.replace(/[\/\\]/g, "_").replace(/[\u0000-\u001f]/g, "_").slice(0, 180) || "unnamed-file";
 const extensionOf = (name: string) => name.includes(".") ? name.split(".").pop()!.toLowerCase().slice(0, 20) : "";
 
 function formatBytes(bytes: number) {
@@ -76,7 +76,7 @@ export default function UniversalFileImport({ session }: { session: Session | nu
         const { error: metadataError } = await supabase.from("knowledge_files").insert({
           id,
           user_id: session.user.id,
-          title: sourceName.replace(/\\.[^.]+$/, "").slice(0, 180) || "Untitled file",
+          title: sourceName.replace(/\.[^.]+$/, "").slice(0, 180) || "Untitled file",
           source_name: sourceName,
           storage_path: storagePath,
           mime_type: mimeType,
