@@ -146,3 +146,20 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 @media(min-width:761px){
  .sidebar{position:sticky;top:0;align-self:flex-start}
 }
+
+
+.memory-form{display:grid;gap:10px;margin-top:18px}
+.memory-form textarea,.memory-form input{width:100%;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.035);color:inherit;padding:12px;font:inherit;outline:none}
+.memory-form textarea{min-height:104px;resize:vertical}
+.memory-form textarea:focus,.memory-form input:focus{border-color:rgba(0,240,255,.55)}
+.memory-form .panel-action{justify-self:start}
+.memory-form .panel-action:disabled{opacity:.45;cursor:not-allowed}
+.memory-list{display:grid;gap:10px;margin-top:14px}
+.memory-item{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.025)}
+.memory-item p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.memory-category{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8d9aa9}
+.memory-actions{display:flex;gap:7px;flex-shrink:0}
+.memory-actions button{border:1px solid rgba(255,255,255,.13);background:transparent;color:inherit;border-radius:8px;padding:7px 9px;font:inherit;font-size:12px;cursor:pointer}
+.memory-actions button:hover{border-color:rgba(0,240,255,.45)}
+.memory-error{color:#ff9a9a;font-size:13px}
+@media(max-width:640px){.memory-item{display:grid}.memory-actions{justify-content:flex-end}}
