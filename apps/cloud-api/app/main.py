@@ -208,7 +208,7 @@ async def create_memory(payload: MemoryCreate, request: Request) -> dict:
 @app.patch("/api/v1/memories/{memory_id}", tags=["intelligence"])
 async def update_memory(memory_id: UUID, payload: MemoryUpdate, request: Request) -> dict:
     await require_authenticated_user(request)
-    changes = payload.model_dump(exclude_unset=True)
+    changes = payload.model_dump(exclude_unset=True, exclude_none=True)
     if not changes:
         raise HTTPException(status_code=400, detail="Provide at least one field to update.")
     if "memory" in changes and changes["memory"] is not None:
