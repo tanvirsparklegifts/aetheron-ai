@@ -48,6 +48,18 @@ class ChatMessage(BaseModel):
         return value
 
 
+class ResearchRequest(BaseModel):
+    query: str = Field(min_length=3, max_length=300)
+
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, value: str) -> str:
+        cleaned = value.strip()
+        if len(cleaned) < 3:
+            raise ValueError("Search query must contain at least 3 characters")
+        return cleaned
+
+
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=12)
 
@@ -264,6 +276,59 @@ async def delete_memory(memory_id: UUID, request: Request) -> dict:
     if not isinstance(rows, list) or not rows:
         raise HTTPException(status_code=404, detail="Memory not found.")
     return {"deleted": True, "id": str(memory_id)}
+
+
+
+@app.post("/api/v1/research/search", tags=["research"])
+async def research_search(payload: ResearchRequest, request: Request) -> dict:
+    """Search the public web through the server-side Tavily key; never expose provider credentials."""
+    await require_authenticated_user(request)
+    client_key = request.client.host if request.client else "unknown"
+    enforce_preview_rate_limit("research:" + client_key)
+    api_key = os.getenv("TAVILY_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Research search is not connected yet. Add a Tavily API key to the server environment; its free tier currently includes 1,000 credits per month.",
+        )
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(20.0, connect=5.0)) as client:
+            response = await client.post(
+                "https://api.tavily.com/search",
+                json={
+                    "api_key": api_key,
+                    "query": payload.query,
+                    "topic": "general",
+                    "search_depth": "basic",
+                    "max_results": 5,
+                    "include_answer": False,
+                    "include_raw_content": False,
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+    except httpx.TimeoutException as exc:
+        raise HTTPException(status_code=504, detail="The research provider timed out. Please try again.") from exc
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code in {401, 403}:
+            raise HTTPException(status_code=503, detail="The research provider key is invalid or not authorized.") from exc
+        if exc.response.status_code == 429:
+            raise HTTPException(status_code=503, detail="The research provider quota or rate limit has been reached. Try again after the quota resets.") from exc
+        raise HTTPException(status_code=502, detail="The research provider could not complete this search.") from exc
+    except (httpx.HTTPError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail="The research provider is temporarily unavailable.") from exc
+    items = []
+    for item in result.get("results", [])[:5]:
+        if not isinstance(item, dict) or not item.get("url") or not item.get("title"):
+            continue
+        items.append({
+            "title": str(item["title"])[:300],
+            "url": str(item["url"])[:2000],
+            "content": str(item.get("content", ""))[:1200],
+            "score": item.get("score"),
+            "published_date": item.get("published_date"),
+        })
+    return {"query": payload.query, "provider": "tavily", "results": items, "answer": result.get("answer") if isinstance(result.get("answer"), str) else None}
 
 
 @app.get("/health", tags=["operations"])
