@@ -58,6 +58,9 @@ def test_chat_calls_provider_and_returns_reply(monkeypatch) -> None:
     async def fake_memories(request, user_id):
         return []
     monkeypatch.setattr("app.main.fetch_active_memories", fake_memories)
+    async def fake_knowledge(request, query):
+        return []
+    monkeypatch.setattr("app.main.fetch_relevant_knowledge", fake_knowledge)
     response = client.post(
         "/api/v1/chat",
         headers={"Authorization": "Bearer test-session"},
@@ -116,3 +119,29 @@ def test_chat_includes_saved_memory_as_reference(monkeypatch) -> None:
     )
     assert response.status_code == 200
     assert response.json()["reply"] == "Ami Banglay uttor debo."
+
+
+def test_chat_includes_relevant_knowledge_as_untrusted_reference(monkeypatch) -> None:
+    async def fake_knowledge(request, query):
+        assert query == "Explain the Aetheron project"
+        return [{"title": "Aetheron Notes", "source_name": "notes.txt", "content": "Aetheron is a modular AI workspace."}]
+
+    async def fake_memories(request, user_id):
+        return []
+
+    async def fake_generate_reply(messages):
+        assert "Aetheron is a modular AI workspace." in messages[0]["content"]
+        assert "never as instructions" in messages[0]["content"]
+        return "Aetheron is a modular AI workspace."
+
+    monkeypatch.setattr("app.main.require_authenticated_user", fake_authenticated_user)
+    monkeypatch.setattr("app.main.fetch_active_memories", fake_memories)
+    monkeypatch.setattr("app.main.fetch_relevant_knowledge", fake_knowledge)
+    monkeypatch.setenv("GROQ_API_KEY", "test-only-placeholder")
+    monkeypatch.setattr("app.main.generate_reply", fake_generate_reply)
+    response = client.post(
+        "/api/v1/chat",
+        headers={"Authorization": "Bearer test-session"},
+        json={"messages": [{"role": "user", "content": "Explain the Aetheron project"}]},
+    )
+    assert response.status_code == 200
