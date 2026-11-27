@@ -123,7 +123,7 @@ export default function Home(){
   if(!Recognition){setVoiceInputError("Speech input is not supported in this browser. Try an updated Chrome browser or type your message.");return;}
   if(voiceInputActive){recognition?.stop();setVoiceInputActive(false);return;}
   try{const instance=new Recognition();instance.lang=voiceLanguage;instance.interimResults=true;instance.continuous=false;
-   instance.onresult=event=>{let transcript="";for(let index=event.resultIndex;index<event.results.length;index++){const result=event.results[index];if(result?.[0]?.transcript)transcript+=result[0].transcript;}if(transcript.trim())setPrompt(previous=>previous?previous+" "+transcript.trim():transcript.trim());};
+   instance.onresult=event=>{let transcript="";for(let index=event.resultIndex;index<event.results.length;index++){const result=event.results[index];if(result?.isFinal&&result[0]?.transcript)transcript+=result[0].transcript;}if(transcript.trim())setPrompt(previous=>previous?previous+" "+transcript.trim():transcript.trim());};
    instance.onerror=event=>{setVoiceInputError(event.error==="not-allowed"?"Microphone permission was denied. Allow microphone access in your browser settings.":"Voice input stopped: "+event.error+". You can continue by typing.");setVoiceInputActive(false);};
    instance.onend=()=>{setVoiceInputActive(false);setRecognition(null);};setRecognition(instance);instance.start();setVoiceInputActive(true);
   }catch{setVoiceInputError("Could not start the microphone. Check browser permission and try again.");setVoiceInputActive(false);}
