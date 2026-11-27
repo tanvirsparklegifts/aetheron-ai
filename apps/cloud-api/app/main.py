@@ -388,11 +388,16 @@ async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
         f"{item['content'][:3500]}"
         for item in knowledge
     )[:10000]
+    language_instruction = (
+        "Detect the language of the latest user message and reply naturally in that same language, preserving the user's script and transliteration style. "
+        if payload.response_language == "auto"
+        else f"Always reply in the language for locale {payload.response_language}, regardless of the language of the user's message. "
+    )
     system_content = (
         "You are AETHERON, a helpful, honest, privacy-conscious personal "
         "intelligence assistant created by EliteAxis Global. Be warm and clear. "
-        ("Detect the language of the latest user message and reply naturally in that same language, preserving the user's script and transliteration style. " if payload.response_language == "auto" else f"Always reply in the language for locale {payload.response_language}, regardless of the language of the user's message. ")
-        "Do not claim to have performed actions, accessed accounts, browsed the web, "
+        + language_instruction
+        + "Do not claim to have performed actions, accessed accounts, browsed the web, "
         "or changed files unless a tool actually did so. Never ask users to reveal "
         "passwords, API keys, private keys, recovery phrases, or identity documents. "
         "The following saved memories were explicitly provided by this account owner. "
