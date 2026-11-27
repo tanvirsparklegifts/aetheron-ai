@@ -163,3 +163,20 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .memory-actions button:hover{border-color:rgba(0,240,255,.45)}
 .memory-error{color:#ff9a9a;font-size:13px}
 @media(max-width:640px){.memory-item{display:grid}.memory-actions{justify-content:flex-end}}
+
+
+/* Conversation history management actions */
+.conversation-row{display:flex;align-items:center;gap:10px}
+.conversation-open{display:flex;align-items:center;gap:12px;flex:1;min-width:0;padding:0;border:0;background:transparent;color:inherit;text-align:left}
+.conversation-open:disabled{opacity:.55}
+.conversation-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.conversation-actions button{padding:7px 8px;border:1px solid #ffffff18;border-radius:7px;background:#ffffff05;color:#9eafc3;font-size:9px}
+.conversation-actions button:hover:not(:disabled){border-color:#78e7f255;color:#dff7ff;background:#78e7f20b}
+.conversation-actions button:disabled{opacity:.4;cursor:not-allowed}
+.conversation-actions button.danger:hover:not(:disabled){border-color:#ff858555;color:#ffaaaa;background:#ff85850b}
+.conversation-library .conversation-row{padding:11px 12px}
+@media(max-width:600px){
+ .conversation-row{align-items:flex-start;flex-wrap:wrap}
+ .conversation-open{min-width:100%;padding-bottom:5px}
+ .conversation-actions{margin-left:46px;flex-wrap:wrap}
+}
