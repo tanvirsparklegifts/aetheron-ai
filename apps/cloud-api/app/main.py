@@ -191,7 +191,7 @@ async def fetch_relevant_knowledge(request: Request, query: str) -> list[dict]:
     )
     if not isinstance(rows, list):
         return []
-    terms = {term for term in re.findall(r"[a-zA-Z0-9_]{3,}", query.lower()) if term not in {"the", "and", "for", "with", "that", "this", "from", "about"}}
+    terms = {term for term in re.findall(r"[^\\W_]{3,}", query.lower()) if term not in {"the", "and", "for", "with", "that", "this", "from", "about"}}
     if not terms:
         return []
     ranked = []
