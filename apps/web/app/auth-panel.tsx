@@ -22,7 +22,7 @@ export default function AuthPanel() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error } = await supabase.auth.signUp({\n          email: email.trim(),\n          password,\n          options: {\n            emailRedirectTo: "https://tanvirsparklegifts.github.io/aetheron-ai/",\n          },\n        });
         if (error) throw error;
         setNotice(data.session
           ? "Account created. Your AETHERON workspace is ready."
