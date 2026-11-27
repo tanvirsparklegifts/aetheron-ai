@@ -62,6 +62,26 @@ class ResearchRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=12)
+    response_language: str = Field(default="auto", min_length=2, max_length=16)
+
+    @field_validator("response_language")
+    @classmethod
+    def validate_response_language(cls, value: str) -> str:
+        allowed = {
+            "auto", "bn-BD", "en-US", "en-GB", "en-IN", "ar-SA", "ur-PK", "hi-IN",
+            "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR", "pt-PT", "ru-RU",
+            "uk-UA", "tr-TR", "fa-IR", "he-IL", "zh-CN", "zh-TW", "yue-HK", "ja-JP",
+            "ko-KR", "id-ID", "ms-MY", "th-TH", "vi-VN", "fil-PH", "ne-NP", "si-LK",
+            "ta-IN", "te-IN", "ml-IN", "kn-IN", "mr-IN", "gu-IN", "pa-IN", "or-IN",
+            "pl-PL", "nl-NL", "sv-SE", "no-NO", "da-DK", "fi-FI", "is-IS", "el-GR",
+            "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sr-RS", "sl-SI",
+            "lt-LT", "lv-LV", "et-EE", "ca-ES", "eu-ES", "gl-ES", "af-ZA", "sw-KE",
+            "am-ET", "zu-ZA", "xh-ZA", "ha-NG", "yo-NG", "ig-NG", "km-KH", "lo-LA",
+            "my-MM", "mn-MN", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "uz-UZ", "ps-AF",
+        }
+        if value not in allowed:
+            raise ValueError("Choose auto-detect or a supported language locale")
+        return value
 
     @field_validator("messages")
     @classmethod
@@ -371,7 +391,7 @@ async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
     system_content = (
         "You are AETHERON, a helpful, honest, privacy-conscious personal "
         "intelligence assistant created by EliteAxis Global. Be warm and clear. "
-        "Reply in the language the user uses, including Bangla or Bangla transliteration. "
+        ("Detect the language of the latest user message and reply naturally in that same language, preserving the user's script and transliteration style. " if payload.response_language == "auto" else f"Always reply in the language for locale {payload.response_language}, regardless of the language of the user's message. ")
         "Do not claim to have performed actions, accessed accounts, browsed the web, "
         "or changed files unless a tool actually did so. Never ask users to reveal "
         "passwords, API keys, private keys, recovery phrases, or identity documents. "
