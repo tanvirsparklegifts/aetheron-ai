@@ -55,7 +55,9 @@ def test_chat_calls_provider_and_returns_reply(monkeypatch) -> None:
     monkeypatch.setattr("app.main.require_authenticated_user", fake_authenticated_user)
     monkeypatch.setenv("GROQ_API_KEY", "test-only-placeholder")
     monkeypatch.setattr("app.main.generate_reply", fake_generate_reply)
-    monkeypatch.setattr("app.main.fetch_active_memories", lambda request, user_id: [])
+    async def fake_memories(request, user_id):
+        return []
+    monkeypatch.setattr("app.main.fetch_active_memories", fake_memories)
     response = client.post(
         "/api/v1/chat",
         headers={"Authorization": "Bearer test-session"},
