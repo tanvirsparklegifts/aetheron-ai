@@ -255,8 +255,6 @@ async def api_root() -> dict[str, str]:
 
 @app.post("/api/v1/chat", tags=["intelligence"])
 async def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
-    await require_authenticated_user(request)
-
     client_key = request.client.host if request.client else "unknown"
     enforce_preview_rate_limit(client_key)
 
