@@ -58,7 +58,7 @@ values ('aetheron-private-files', 'aetheron-private-files', false, 52428800, nul
 on conflict (id) do nothing;
 
 -- Never silently change an existing bucket's access model or upload limits.
-do $
+do $aetheron_bucket_guard$
 begin
   if not exists (
     select 1 from storage.buckets
@@ -69,7 +69,7 @@ begin
     raise exception 'Existing aetheron-private-files bucket is not private or exceeds the 50 MiB limit; inspect it manually before proceeding.';
   end if;
 end;
-$;
+$aetheron_bucket_guard$;
 
 drop policy if exists "aetheron_private_files_read_own" on storage.objects;
 create policy "aetheron_private_files_read_own" on storage.objects
