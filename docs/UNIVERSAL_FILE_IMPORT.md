@@ -9,6 +9,7 @@ Accept arbitrary user file formats without treating every format as immediately 
 - Metadata table: `public.knowledge_files`, with RLS ownership checks.
 - Maximum object size in this initial tier: 50 MiB per file.
 - No public URLs; use authenticated access or short-lived signed URLs.
+- Signed downloads must set attachment disposition so untrusted HTML/SVG uploads are downloaded rather than rendered inline.
 - Files are data only. Never execute, render as active HTML, or launch uploaded programs.
 
 ## Format handling model
