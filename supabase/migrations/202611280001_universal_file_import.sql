@@ -55,10 +55,21 @@ create policy "knowledge_files_delete_own" on public.knowledge_files
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('aetheron-private-files', 'aetheron-private-files', false, 52428800, null)
-on conflict (id) do update set
-  public = false,
-  file_size_limit = 52428800,
-  allowed_mime_types = null;
+on conflict (id) do nothing;
+
+-- Never silently change an existing bucket's access model or upload limits.
+do $
+begin
+  if not exists (
+    select 1 from storage.buckets
+    where id = 'aetheron-private-files'
+      and public = false
+      and file_size_limit <= 52428800
+  ) then
+    raise exception 'Existing aetheron-private-files bucket is not private or exceeds the 50 MiB limit; inspect it manually before proceeding.';
+  end if;
+end;
+$;
 
 drop policy if exists "aetheron_private_files_read_own" on storage.objects;
 create policy "aetheron_private_files_read_own" on storage.objects
