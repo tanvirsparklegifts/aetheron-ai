@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, FileArchive, FileUp, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -36,7 +36,7 @@ export default function UniversalFileImport({ session }: { session: Session | nu
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = async () => {
     if (!supabase || !session?.user.id) return;
     const { data, error: queryError } = await supabase
       .from("knowledge_files")
@@ -49,9 +49,28 @@ export default function UniversalFileImport({ session }: { session: Session | nu
       return;
     }
     setFiles((data || []) as StoredFile[]);
-  }, [session?.user.id]);
+  };
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!supabase || !userId) return;
+    let active = true;
+    void supabase
+      .from("knowledge_files")
+      .select("id,title,source_name,storage_path,mime_type,extension,file_size,processing_status,is_active,created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .then(({ data, error: queryError }) => {
+        if (!active) return;
+        if (queryError) {
+          setError("Universal file storage is not ready. Apply the reviewed database migration first.");
+          return;
+        }
+        setFiles((data || []) as StoredFile[]);
+      });
+    return () => { active = false; };
+  }, [session?.user.id]);
 
   const uploadFiles = async (selected: FileList | null) => {
     if (!supabase || !session || !selected?.length || busy) return;
@@ -93,7 +112,7 @@ export default function UniversalFileImport({ session }: { session: Session | nu
       setNotice(uploaded + " file(s) securely stored. Content extraction is a separate processing stage.");
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "File import failed.");
+      setError((uploaded ? uploaded + " file(s) uploaded before an error. " : "") + (cause instanceof Error ? cause.message : "File import failed."));
       await refresh();
     } finally {
       setBusy(false);
