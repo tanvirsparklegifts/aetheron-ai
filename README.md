@@ -6,7 +6,7 @@
 
 AETHERON is a privacy-first personal executive intelligence platform with a shared cloud intelligence layer and planned Web, Windows, and Android experiences.
 
-> Status: early foundation and AI chat preview. The first server-side Groq chat adapter is implemented, but authentication, tenant isolation, persistent memory, integrations, and device automation are not production-ready.
+> **Current status (2026-11-28):** The GitHub Pages web preview is published and the FastAPI Cloud API is deployed on Render. Render's `/health` endpoint has returned HTTP 200. The application remains an early preview: authenticated user journeys, cross-user isolation, chat persistence, memory/knowledge retrieval, and file workflows require end-to-end verification. Do not use it for sensitive or business-critical data.
 
 ## Planned surfaces
 - Web Dashboard: primary product and account control center.
