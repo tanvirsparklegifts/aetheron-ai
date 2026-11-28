@@ -79,14 +79,18 @@ export default function Home(){
  const updateTaskStatus=async(task:Task)=>{if(!supabase||!session||projectBusy)return;const status=task.status==="todo"?"in_progress":task.status==="in_progress"?"done":"todo";setProjectBusy(true);setProjectError("");const {error}=await supabase.from("tasks").update({status}).eq("id",task.id).eq("user_id",session.user.id);if(error)setProjectError("Could not update task: "+error.message);else setTasks(prev=>prev.map(t=>t.id===task.id?{...t,status}:t));setProjectBusy(false);};
  const deleteProject=async(project:Project)=>{if(!supabase||!session||projectBusy||!window.confirm("Delete this project and all its tasks?"))return;setProjectBusy(true);setProjectError("");const {error}=await supabase.from("projects").delete().eq("id",project.id).eq("user_id",session.user.id);if(error)setProjectError("Could not delete project: "+error.message);else{setProjects(prev=>prev.filter(p=>p.id!==project.id));setTasks(prev=>prev.filter(t=>t.project_id!==project.id));}setProjectBusy(false);};
  const openConversation=async(conversation:Conversation)=>{
-  if(!supabase||loading)return;
-  setHistoryLoading(true);setChatError("");setCurrentConversationId(conversation.id);
+  if(!supabase||loading||historyLoading)return;
+  setHistoryLoading(true);setChatError("");setCurrentConversationId(conversation.id);setMessages([]);
   try{
    const {data,error}=await supabase.from("messages").select("role,content").eq("conversation_id",conversation.id).order("created_at",{ascending:true}).limit(100);
    if(error)throw error;
    setMessages((data||[]) as {role:"user"|"assistant";content:string}[]);
    setPrompt("");
-  }catch(error){setChatError(error instanceof Error?error.message:"Could not load this conversation.");}
+  }catch(error){
+   // Do not leave the previous conversation visible or attach a later send to a failed load.
+   setMessages([]);setCurrentConversationId(null);
+   setChatError(error instanceof Error?error.message:"Could not load this conversation.");
+  }
   finally{setHistoryLoading(false);}
  };
  const renameConversation=async(conversation:Conversation)=>{
@@ -148,7 +152,7 @@ export default function Home(){
  const toggleReplySpeech=()=>{if(speakReplies){setSpeakReplies(false);stopVoiceOutput();return;}if(typeof window==="undefined"||!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){setVoiceInputError("Speech output is not supported in this browser.");return;}setSpeakReplies(true);};
 
  const submit=async(value=prompt)=>{
-  const text=value.trim(); if(!text||loading)return;
+  const text=value.trim(); if(!text||loading||historyLoading)return;
   if(!apiUrl){setChatError("Cloud API URL is not configured yet. Deploy the Cloud API, then set NEXT_PUBLIC_AETHERON_API_URL in the GitHub Pages build environment.");return;}
   const next=[...messages,{role:"user" as const,content:text}].slice(-12);
   setMessages(next);setPrompt("");setChatError("");setLoading(true);
