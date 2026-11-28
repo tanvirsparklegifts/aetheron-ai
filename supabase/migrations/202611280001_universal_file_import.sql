@@ -24,6 +24,12 @@ create index if not exists knowledge_files_user_updated_idx
 
 alter table public.knowledge_files enable row level security;
 
+-- New public-schema tables do not inherit the hardened grants on existing tables.
+-- Explicitly deny anonymous table access and grant only authenticated CRUD;
+-- row ownership remains enforced by the RLS policies below.
+revoke all on table public.knowledge_files from anon, authenticated;
+grant select, insert, update, delete on table public.knowledge_files to authenticated;
+
 drop policy if exists "knowledge_files_select_own" on public.knowledge_files;
 create policy "knowledge_files_select_own" on public.knowledge_files
   for select to authenticated using ((select auth.uid()) = user_id);
