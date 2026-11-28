@@ -74,6 +74,11 @@ export default function UniversalFileImport({ session }: { session: Session | nu
         }
         setFiles((data || []) as StoredFile[]);
         setFilesLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Could not load your private files. Check your connection and try again.");
+        setFilesLoading(false);
       });
     return () => { active = false; };
   }, [session?.user.id]);
