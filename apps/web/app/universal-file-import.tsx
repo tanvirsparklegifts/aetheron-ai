@@ -32,6 +32,7 @@ function formatBytes(bytes: number) {
 export default function UniversalFileImport({ session }: { session: Session | null }) {
   const [files, setFiles] = useState<StoredFile[]>([]);
   const [busy, setBusy] = useState(false);
+  const [filesLoading, setFilesLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +56,9 @@ export default function UniversalFileImport({ session }: { session: Session | nu
     const userId = session?.user.id;
     if (!supabase || !userId) return;
     let active = true;
+    setFiles([]);
+    setFilesLoading(true);
+    setError("");
     void supabase
       .from("knowledge_files")
       .select("id,title,source_name,storage_path,mime_type,extension,file_size,processing_status,is_active,created_at")
@@ -65,9 +69,11 @@ export default function UniversalFileImport({ session }: { session: Session | nu
         if (!active) return;
         if (queryError) {
           setError("Universal file storage is not ready. Apply the reviewed database migration first.");
+          setFilesLoading(false);
           return;
         }
         setFiles((data || []) as StoredFile[]);
+        setFilesLoading(false);
       });
     return () => { active = false; };
   }, [session?.user.id]);
@@ -167,7 +173,7 @@ export default function UniversalFileImport({ session }: { session: Session | nu
       {error && <p className="memory-error" role="alert">{error}</p>}
       {notice && <p className="panel-muted" role="status">{notice}</p>}
       {busy && <p className="panel-muted"><RefreshCw size={14} /> Processing upload…</p>}
-      {files.length === 0 ? <div className="panel-empty"><FileArchive size={22}/><b>No universal files stored</b><span>Choose one or more files to add them to your private library.</span></div> :
+      {filesLoading ? <p className="panel-muted" role="status">Loading your private files…</p> : files.length === 0 ? <div className="panel-empty"><FileArchive size={22}/><b>No universal files stored</b><span>Choose one or more files to add them to your private library.</span></div> :
         <div className="knowledge-list">{files.map(file => <article className="knowledge-item" key={file.id}>
           <div className="knowledge-copy"><b>{file.source_name}</b><small>{file.mime_type} · {formatBytes(file.file_size)} · {file.processing_status}</small><p>Original file is stored privately. Text extraction is not yet available for this file.</p></div>
           <div className="knowledge-actions"><button type="button" onClick={() => void downloadFile(file)} disabled={busy} aria-label={"Download " + file.source_name}><Download size={14}/> Download</button><button className="danger" type="button" onClick={() => void deleteFile(file)} disabled={busy} aria-label={"Delete " + file.source_name}><Trash2 size={14}/> Delete</button></div>
