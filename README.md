@@ -59,9 +59,11 @@ GitHub Pages hosts only the static web frontend. The FastAPI Cloud API must be d
 - [x] Premium dashboard visual prototype
 - [x] First server-side Groq chat adapter and chat endpoint
 - [x] Dashboard chat client integration
-- [ ] Deploy Cloud API and connect GitHub Pages preview
-- [ ] Authentication, tenant isolation, and persistent memory
-- [ ] Redis rate limiting, audit trail, and security review
+- [x] Deploy Cloud API to Render and verify the `/health` endpoint
+- [ ] Independently verify authenticated chat, conversation save/restore, memory retrieval, and knowledge retrieval in a real browser session
+- [ ] Complete two-account tenant-isolation and RLS tests
+- [ ] Verify private file upload/download/delete and isolation before enabling the intake UI
+- [ ] Redis-backed global rate limiting, audit trail, backup verification, and security hardening
 - [ ] Read-only integrations and approval-gated agent workflows
 - [ ] Windows and Android companions
 
