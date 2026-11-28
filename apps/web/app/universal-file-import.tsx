@@ -123,12 +123,18 @@ export default function UniversalFileImport({ session }: { session: Session | nu
   const downloadFile = async (file: StoredFile) => {
     if (!supabase) return;
     setError("");
-    const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(file.storage_path, 60);
+    const { data, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(file.storage_path, 60, { download: file.source_name });
     if (signedError || !data?.signedUrl) {
       setError("Could not create a secure download link: " + (signedError?.message || "Unknown error"));
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    const link = document.createElement("a");
+    link.href = data.signedUrl;
+    link.download = file.source_name;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const deleteFile = async (file: StoredFile) => {
