@@ -14,7 +14,9 @@ Open http://localhost:3000.
 - Responsive dark workspace with cyan/violet visual system and workspace navigation.
 - Supabase authentication integration and account-scoped data access.
 - AI chat through the cloud API, with conversation and message persistence paths.
-- Knowledge workspace for text documents, plus a feature-branch universal private-file intake UI.
+- Knowledge workspace for bounded text-document import.
+- Browser speech input and optional browser-provided reply speech where supported.
+- A universal private-file intake UI exists on `feat/universal-file-import` only; it is not part of the published `main` frontend.
 - Basic memory, project/task, and web-research interfaces.
 - Browser speech input where supported.
 
