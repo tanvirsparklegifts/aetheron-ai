@@ -62,13 +62,14 @@ export default function UniversalFileImport({ session }: { session: Session | nu
     const userId = session?.user.id;
     if (!supabase || !userId) return;
     let active = true;
-    void supabase
-      .from("knowledge_files")
-      .select("id,title,source_name,storage_path,mime_type,extension,file_size,processing_status,is_active,created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(100)
-      .then(({ data, error: queryError }) => {
+    void (async () => {
+      try {
+        const { data, error: queryError } = await supabase
+          .from("knowledge_files")
+          .select("id,title,source_name,storage_path,mime_type,extension,file_size,processing_status,is_active,created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(100);
         if (!active) return;
         if (queryError) {
           setFiles([]);
@@ -80,14 +81,14 @@ export default function UniversalFileImport({ session }: { session: Session | nu
         setFiles((data || []) as StoredFile[]);
         setLoadedForUserId(userId);
         setFilesLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (!active) return;
         setFiles([]);
         setLoadedForUserId(userId);
         setError("Could not load your private files. Check your connection and try again.");
         setFilesLoading(false);
-      });
+      }
+    })();
     return () => { active = false; };
   }, [session?.user.id]);
 
