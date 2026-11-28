@@ -21,7 +21,7 @@ Open http://localhost:3000.
 ## Important implementation boundaries
 
 - A visible interface does not mean every workflow has passed end-to-end testing.
-- Universal private-file intake is on the `feat/universal-file-import` branch and requires its reviewed Supabase migration before upload works. The migration has not been applied to the live project.
+- Universal private-file intake is on the `feat/universal-file-import` branch and has its schema migration applied to the existing Supabase project, but the feature branch is not yet merged/deployed. Upload/download and two-account isolation still require end-to-end verification.
 - Universal file intake stores originals; PDF/DOCX extraction, OCR, image understanding, audio/video transcription, archive inspection, and indexing are not implemented.
 - Multi-agent tool execution, approval-gated automation, image/video generation, and broad third-party integrations remain roadmap work.
 - Check the root project documentation and feature-specific docs for current status. Never describe roadmap items as shipped functionality.
